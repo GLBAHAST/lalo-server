@@ -15,10 +15,9 @@ def fetch_media():
     url = data.get("url")
     
     if not url:
-        return jsonify({"error": "No URL provided"}), 400
+        return jsonify({"success": False, "error": "No URL provided"}), 400
 
     try:
-        # Crucial for Vercel: skip_download avoids filesystem and timeout issues
         ydl_opts = {
             'format': 'best',
             'skip_download': True,
@@ -29,11 +28,22 @@ def fetch_media():
             info = ydl.extract_info(url, download=False)
             video_url = info.get('url')
             title = info.get('title', 'video')
+            uploader = info.get('uploader', 'User')
+            thumbnail = info.get('thumbnail', '')
             
+        # Wrapped in "data" to match your index.html expectations
         return jsonify({
             "success": True,
-            "title": title,
-            "download_url": video_url
+            "data": {
+                "video_url": video_url,
+                "audio_url": video_url,
+                "video_ext": "mp4",
+                "audio_ext": "mp3",
+                "title": title,
+                "uploader": uploader,
+                "thumbnail": thumbnail,
+                "http_headers": info.get('http_headers', {})
+            }
         })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
